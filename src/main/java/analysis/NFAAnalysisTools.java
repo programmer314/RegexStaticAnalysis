@@ -184,7 +184,7 @@ public class NFAAnalysisTools {
 					/* This edge changed the word, find it's original value */
 					originalWord = originalWords.get(currentM1Edge);
 				}
-				
+
 				for (NFAEdge currentM2Edge : m2.outgoingEdgesOf(m2SourceState)) {
 					if (Thread.currentThread().isInterrupted()) {
 						throw new InterruptedException();
@@ -531,9 +531,10 @@ public class NFAAnalysisTools {
 	 * @throws InterruptedException 
 	 */
 	public static LinkedList<NFAGraph> getStronglyConnectedComponents(NFAGraph m) throws InterruptedException {
-		KosarajuStrongConnectivityInspector<NFAVertexND, NFAEdge> sci = new KosarajuStrongConnectivityInspector<NFAVertexND, NFAEdge>(m);
+		KosarajuStrongConnectivityInspectorWithIntercept<NFAVertexND, NFAEdge> sci =
+				new KosarajuStrongConnectivityInspectorWithIntercept<>(m);
 		List<Graph<NFAVertexND, NFAEdge>> sccs = sci.getStronglyConnectedComponents();
-		LinkedList<NFAGraph> sccNFAs = new LinkedList<NFAGraph>();
+		LinkedList<NFAGraph> sccNFAs = new LinkedList<>();
 
 		for (Graph<NFAVertexND, NFAEdge> scc : sccs) {
 			if (isInterrupted()) {
@@ -541,7 +542,7 @@ public class NFAAnalysisTools {
 			}
 
 			/* scc's consisting of no edges are irrelevant for our purpose */
-			if (scc.edgeSet().size() > 0) {
+			if (!scc.edgeSet().isEmpty()) {
 
 				NFAGraph currentNFAG = new NFAGraph();
 				for (NFAVertexND v : scc.vertexSet()) {

@@ -4,7 +4,9 @@ public class RegexAnchor implements RegexToken {
 	
 	public enum RegexAnchorType {
 		LINESTART("^"),
-		LINEEND("$");
+		LINEEND("$"),
+		WORD("\\b"),
+		NONWORD("\\B");
 		
 		private final String symbol;
 		

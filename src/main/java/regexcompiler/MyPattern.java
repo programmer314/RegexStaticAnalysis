@@ -32,7 +32,7 @@ import analysis.AnalysisSettings.NFAConstruction;
 
 public class MyPattern {
 
-	private NFAGraph nfaGraph;
+	private final NFAGraph nfaGraph;
 	
 	public static void main(String [] args) {
 		if (args.length < 1) {
@@ -95,9 +95,8 @@ public class MyPattern {
 		default:
 			throw new RuntimeException("Unknown regex flavour");
 		}
-		
-		NFAGraph resultNFA = pttnc.convertParseTree(parseTree);
-		return resultNFA;
+
+		return pttnc.convertParseTree(parseTree);
 	}
 
 	private static class Tokeniser {
@@ -107,11 +106,7 @@ public class MyPattern {
 		private final int length;
 		private int i;
 
-		private List<RegexToken> tokenList;
-		private Stack<List<RegexToken>> tokenListStack;
-		private Stack<RegexGroupType> groupTypeStack;
-
-		private boolean verbatimMode;
+        private boolean verbatimMode;
 
 		private Tokeniser(String pattern) {
 			this.pattern = pattern;
@@ -121,12 +116,17 @@ public class MyPattern {
 
 		}
 
+		private static final Pattern boundedPattern = Pattern.compile("(\\d+),(\\d+)");
+		private static final Pattern unboundedPattern = Pattern.compile("(\\d+),");
+		private static final Pattern constantRepititionPattern = Pattern.compile("(\\d+)");
+
 		private List<RegexToken> tokenise() {
-			tokenList = new ArrayList<RegexToken>();
-			tokenListStack = new Stack<List<RegexToken>>();
-			groupTypeStack = new Stack<RegexGroupType>();
+            List<RegexToken> tokenList = new ArrayList<RegexToken>();
+            Stack<List<RegexToken>> tokenListStack = new Stack<List<RegexToken>>();
+            Stack<RegexGroupType> groupTypeStack = new Stack<RegexGroupType>();
+
 			i = 0;
-			while (true) {
+			while (length > i) {
 				if (!verbatimMode) {
 					switch (patternArr[i]) {
 					case '^':
@@ -165,6 +165,16 @@ public class MyPattern {
 						switch (patternArr[i]) {
 						case 'Q':
 							this.verbatimMode = true;
+							i++;
+							break;
+						case 'b':
+							RegexAnchor wordBoundary = new RegexAnchor(RegexAnchorType.WORD, i);
+							tokenList.add(wordBoundary);
+							i++;
+							break;
+						case 'B':
+							RegexAnchor nonWordBoundary = new RegexAnchor(RegexAnchorType.NONWORD, i);
+							tokenList.add(nonWordBoundary);
 							i++;
 							break;
 						default:
@@ -217,9 +227,6 @@ public class MyPattern {
 						}
 
 						String bounds = countClosureOperatorBuilder.toString();
-						Pattern boundedPattern = Pattern.compile("(\\d+),(\\d+)");
-						Pattern unboundedPattern = Pattern.compile("(\\d+),");
-						Pattern constantRepititionPattern = Pattern.compile("(\\d+)");
 
 						Matcher boundedMatcher = boundedPattern.matcher(bounds);
 						Matcher unboundedMatcher = unboundedPattern.matcher(bounds);
@@ -289,10 +296,6 @@ public class MyPattern {
 						i++;
 					}
 				} // End if/else
-
-				if (i >= length) {
-					break;
-				}
 			}
 			return tokenList;
 
@@ -319,7 +322,7 @@ public class MyPattern {
 					if (patternArr[i] == '\\') {
 						/* do not interpret escaped character */
 						i++;
-						characterClassBuilder.append("\\" + patternArr[i]);
+						characterClassBuilder.append("\\").append(patternArr[i]);
 					} else {
 						characterClassBuilder.append(patternArr[i]);
 					}
@@ -454,7 +457,7 @@ public class MyPattern {
 			case STAR:
 				return new RegexStarOperator(quantifierType, i);
 			default:
-				throw new RuntimeException("Unkown oeprator: " + ot);
+				throw new RuntimeException("Unknown operator: " + ot);
 			}
 		}
 	
@@ -472,12 +475,22 @@ public class MyPattern {
 						case '!':							
 							groupType = RegexGroupType.NEGLOOKBEHIND;
 							break;
+						case 'i':
+							if (patternArr[i + 3] == ')') {
+								i += 2;
+								return RegexGroupType.NORMAL;
+							}
+						case '-':
+							if (patternArr[i + 3] == 'i' && patternArr[i + 4] == ')') {
+								i += 3;
+								return RegexGroupType.NORMAL;
+							}
 						default:
-							throw new PatternSyntaxException("Unkown look-behind group", pattern, i);
+							throw new PatternSyntaxException("Unknown look-behind group", pattern, i);
 
 						}
 					} else {
-						throw new PatternSyntaxException("Unkown look-behind group", pattern, i);
+						throw new PatternSyntaxException("Unknown look-behind group", pattern, i);
 					}
 					i += 4;
 				} else {
@@ -553,13 +566,7 @@ public class MyPattern {
 		public TreeNode parseRegex() {
 			//System.out.println("Parse Regex");
 			if (currentToken.getTokenType() == TokenType.ANCHOR) {
-				RegexAnchor regexAnchorToken = (RegexAnchor) currentToken;
-				if (regexAnchorToken.getAnchorType() == RegexAnchorType.LINESTART && !isNested) {
-					nextToken();
-					/* Since we assume line based matching, we ignore the caret at the start */
-				} else {
-					throw new UnimplementedFunctionalityException("Anchor at invalid position: " + regexAnchorToken.getAnchorType() + " at " + regexAnchorToken.getIndex());
-				}
+				nextToken();
 			}
 			TreeNode root = parseTerm();
 			while (checkEndOfTerm()) {
@@ -575,16 +582,7 @@ public class MyPattern {
 				
 			}
 			if (!endOfStream && currentToken.getTokenType() == TokenType.ANCHOR) {
-				RegexAnchor regexAnchorToken = (RegexAnchor) currentToken;
 				nextToken();
-				if (regexAnchorToken.getAnchorType() == RegexAnchorType.LINEEND && !isNested) {
-					/* Since we assume line based matching, we ignore the dollar at the line end */
-				} else {
-					throw new UnimplementedFunctionalityException("Anchor at invalid position: " + regexAnchorToken.getAnchorType() + " at " + regexAnchorToken.getIndex());
-				}
-			}
-			if (!endOfStream) {
-				throw new PatternSyntaxException("Dangling meta character '" + currentToken + "'", pattern, currentToken.getIndex());
 			}
 			//System.out.println("END Parse Regex");
 			return root;
@@ -593,6 +591,9 @@ public class MyPattern {
 		
 		public TreeNode parseTerm() {
 			//System.out.println("Parse Term");
+			if (currentToken == null) {
+				return new TreeNode(new RegexSymbol("", index));
+			}
 			TreeNode root;
 			if (currentToken.getTokenType() == TokenType.SUBEXPRESSION) {
 				root = parseFactor();
@@ -606,8 +607,7 @@ public class MyPattern {
 				}
 				
 			} else if (currentToken.getTokenType() == TokenType.ANCHOR) {
-				RegexAnchor regexAnchorToken = (RegexAnchor) currentToken;
-				throw new UnimplementedFunctionalityException("Anchor at invalid position: " + regexAnchorToken.getAnchorType() + " at " + regexAnchorToken.getIndex());
+				return new TreeNode(new RegexSymbol("", index));
 			} else {
 				throw new RuntimeException("Unknown token type: " + currentToken.getTokenType());
 			}

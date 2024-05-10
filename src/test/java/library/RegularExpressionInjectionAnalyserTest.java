@@ -19,7 +19,11 @@ class RegularExpressionInjectionAnalyserTest {
                     "([a-zA-Z0-9]{4}\\s){3,8}[a-zA-Z0-9]{1,4}",
                     "^(?<label>3[47][0-9]{13})$",
                     "^\\p{Sc}[0-9]",
-                    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "(^a)|^(b)",
+                    "(^(6|7)\\d{3}-?\\d{4}-?\\d{4}-?\\d{4}|(4|5)\\d{15})|(^(7022)-?\\d{4}-?\\d{4}-?\\d{4}|(7022)-?\\d{12})|(^((3\\d{3}))-\\d{6}-\\d{5}|^((3\\d{14})))",
+                    "^((4\\d{3})|(5[1-5]\\d{2}))(-?|\\020?)(\\d{4}(-?|\\020?)){3}|^(3[4,7]\\d{2})(-?|\\020?)\\d{6}(-?|\\020?)\\d{5}",
+                    "^\\b([0-9]{2})((?![0-9]{10}\\b)[0-9]{10})\\b"
             })
     void shouldCorrectlyIdentifyAsNotVulnerable(String pattern) throws ExecutionException {
         // given
@@ -46,7 +50,7 @@ class RegularExpressionInjectionAnalyserTest {
     void shouldCorrectlyIdentifyAsVulnerable(String pattern) throws ExecutionException {
         // given
         // when
-        boolean isVulnerable = RegularExpressionInjectionAnalyser.isVulnerable(pattern);
+        boolean isVulnerable = RegularExpressionInjectionAnalyser.isVulnerable(pattern, 2);
 
         // then
         assertTrue(isVulnerable);

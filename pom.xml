@@ -6,11 +6,14 @@
 
     <groupId>io.github.programmer314</groupId>
     <artifactId>regex-static-analysis</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <packaging>jar</packaging>
 
     <name>RegexStaticAnalysis</name>
-    <description>A tool to perform static analysis on regexes to determine whether they are vulnerable to ReDoS. Credit goes to Nicolaas Weideman for the original project, I just extended it with a simple function that can be used in other java projects.</description>
+    <description>
+        A tool to perform static analysis on regexes to determine whether they are vulnerable to ReDoS. Credit goes to Nicolaas Weideman for the original project, I just extended it with a simple function that can be used in other java projects.
+        Feel free to contact me (Martin Anderson - marty@meghouse.net) if you have found any bugs or have any suggestions for improvements.
+    </description>
     <url>https://github.com/programmer314/RegexStaticAnalysis</url>
 
     <scm>

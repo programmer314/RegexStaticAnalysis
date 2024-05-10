@@ -57,6 +57,10 @@ public class TransitionLabelParserRecursive {
 		TransitionLabel toReturn;
 		RangeSet labelRanges;
 		consumeSymbol();
+		if (currentSymbol == null) {
+			labelScanner.close();
+			return new CharacterClassTransitionLabel();
+		}
 		switch (currentSymbol) {
 		case ".":
 			labelRanges = CharacterClassTransitionLabel.predefinedRangeWildcard();

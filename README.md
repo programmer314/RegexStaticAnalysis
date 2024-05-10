@@ -29,6 +29,7 @@ This regex will have quadratic matching time.
 ### Method for checking if a regex is vulnerable - inspiration for project fork
 If you import this project into your code, you can easily check if a regular expression is vulnerable by importing `RegularExpressionInjectionAnalyser` and calling the static method `isVulnerable(<regex>)`, where `<regex>` is the regular expression string that should be checked.
 This method returns true if the regex is vulnerable, or it timed out, otherwise false.
+You can also customize the timeout in the second parameter.
 
 
 ## Motivation

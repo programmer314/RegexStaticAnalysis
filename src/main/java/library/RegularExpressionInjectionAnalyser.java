@@ -16,7 +16,9 @@ import java.util.regex.PatternSyntaxException;
 
 public class RegularExpressionInjectionAnalyser implements Runnable {
     private static final String ERROR_MESSAGE_NO_TERMINATE = "Executor could not be terminated";
-    private static final String ERROR_MESSAGE_BACKTRACKING_NOT_SUPPORTED = "Backtracking not supported";
+    private static final String ERROR_MESSAGE_BACKREFERENCING_NOT_SUPPORTED = "Backreferencing not supported";
+
+    private static final long DEFAULT_TIMEOUT = 5;
 
     private final String pattern;
     private final NFAAnalyserInterface analyser;
@@ -34,6 +36,10 @@ public class RegularExpressionInjectionAnalyser implements Runnable {
     }
 
     public static boolean isVulnerable(String pattern) throws ExecutionException {
+        return isVulnerable(pattern, DEFAULT_TIMEOUT);
+    }
+
+    public static boolean isVulnerable(String pattern, long timeout) throws ExecutionException {
         NFAAnalyserInterface analyser = new NFAAnalyserFlattening(
                 AnalysisSettings.PriorityRemovalStrategy.UNPRIORITISE);
         RegularExpressionInjectionAnalyser regexAnalyser = new RegularExpressionInjectionAnalyser(pattern, analyser);
@@ -42,7 +48,7 @@ public class RegularExpressionInjectionAnalyser implements Runnable {
         Future<?> future = executor.submit(regexAnalyser);
         executor.shutdown();
         try {
-            future.get(5, TimeUnit.SECONDS);
+            future.get(timeout, TimeUnit.SECONDS);
             return List.of(NFAAnalyserInterface.AnalysisResultsType.EDA, NFAAnalyserInterface.AnalysisResultsType.IDA)
                     .contains(regexAnalyser.analysisResultsType);
         } catch (TimeoutException e) {
@@ -55,7 +61,7 @@ public class RegularExpressionInjectionAnalyser implements Runnable {
             if (e.getCause() instanceof PatternSyntaxException) {
                 PatternSyntaxException pse = (PatternSyntaxException) e.getCause();
                 if (pse.getPattern().matches("^\\\\\\d$")) {
-                    throw new ExecutionException(new UnsupportedOperationException(ERROR_MESSAGE_BACKTRACKING_NOT_SUPPORTED));
+                    throw new ExecutionException(new UnsupportedOperationException(ERROR_MESSAGE_BACKREFERENCING_NOT_SUPPORTED));
                 }
             }
             throw e;
